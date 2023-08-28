@@ -1,3 +1,7 @@
+"""
+此文件仅用于查看温度拟合曲线绘制以及散点图绘制，并不用于项目中。
+"""
+
 import matplotlib.pyplot as plt
 import numpy as np
 

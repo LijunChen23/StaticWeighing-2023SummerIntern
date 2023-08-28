@@ -1,8 +1,13 @@
+"""
+此代码服务于Tab2的子tab1。
+"""
+
 import pandas as pd
 from tkinter import filedialog, messagebox
 
 
-def create_header_dataframe(name):
+# ======================================================================================================================
+def create_header_df(name):
     # 创建包含数据的列表
     header = [
         ["MpRecipe.Header", "$Type", "STRING", "HeaderData"],
@@ -15,13 +20,13 @@ def create_header_dataframe(name):
         ["gFactor", "gFactor.ControllerSerialNo", "STRING", ""]
     ]
     # 创建DataFrame
-    dataframe_header = pd.DataFrame(header, columns=["Parameter", "Field", "DataType", "Value"])
+    df_header = pd.DataFrame(header, columns=["Parameter", "Field", "DataType", "Value"])
     # 设置最后一行最后一列的值为一个变量的值
-    dataframe_header.iloc[-1, -1] = name
-    return dataframe_header
+    df_header.iloc[-1, -1] = name
+    return df_header
 
 
-# 生成坐标DataFrame
+# 生成坐标DataFrame =====================================================================================================
 def get_df_field(status, weight):
     df_field = pd.DataFrame()
     categories = ["Weight6D", "Factor", "TempSlope"]
@@ -45,6 +50,7 @@ def get_df_field(status, weight):
     return df_field
 
 
+# ======================================================================================================================
 def gen_calibration_data(df, table_name):
     weigh_ref_counts = df["WeighStatus"].value_counts()  # 查看 "WeighStatus" 列中不同值的数量
     max_weigh_ref_count = weigh_ref_counts.max()  # 获取最大的数量
@@ -57,6 +63,7 @@ def gen_calibration_data(df, table_name):
     for weigh_status in list(range(6)):
         print(weigh_status)
         df_all_weight = pd.DataFrame()
+        # 若在数据库中，则生成相应的dataframe ------------------------------------------------------------------------------
         if weigh_status in df["WeighStatus"].values:
             # 保留 "WeighStatus" 列的值为 weigh_status 的行
             df_filtered = df[df["WeighStatus"] == weigh_status]
@@ -80,6 +87,8 @@ def gen_calibration_data(df, table_name):
                 # 在此weight下，将新获得的结果存入dataframe中
                 df_all_weight = pd.concat([df_all_weight, df_weigh_ref_and_result], axis=0)
                 df_all_weight.reset_index(drop=True, inplace=True)  # 重置索引
+
+        # 如果不在数据库中，则创建为0的dataframe以满足格式需求 ---------------------------------------------------------------
         else:
             for weigh_ref_no in range(max_weigh_ref_count):
                 df_value = pd.DataFrame({"Value": [0] * 156})
@@ -92,15 +101,16 @@ def gen_calibration_data(df, table_name):
                 df_all_weight = pd.concat([df_all_weight, df_weigh_ref_and_result], axis=0)
                 df_all_weight.reset_index(drop=True, inplace=True)  # 重置索引
 
-        # 在包含所有状态即重量的dataframe中加入新的重量的dataframe
+        # 在包含所有状态即重量的dataframe中加入新的重量的dataframe -----------------------------------------------------------
         df_all_status = pd.concat([df_all_status, df_all_weight], axis=0)
     df_all_status.reset_index(drop=True, inplace=True)  # 重置索引
+
     # 按照需求重置列的位置
     list_column_name = ["Parameter", "Field", "DataType", "Value"]
     df_all_status = df_all_status[list_column_name].reset_index(drop=True)
 
     # 添加header dataframe
-    df_header = create_header_dataframe(table_name)
+    df_header = create_header_df(table_name)
     df_final = pd.concat([df_header, df_all_status], axis=0)
     df_final.reset_index(drop=True, inplace=True)  # 重置索引
 
@@ -115,6 +125,7 @@ def gen_calibration_data(df, table_name):
         messagebox.showinfo("提示", "标定数据未储存")  # 弹窗告知用户未储存标定数据
 
 
+# ======================================================================================================================
 def main():
     df = pd.read_csv(r"C:\Users\21872\Desktop\calibration\标定数据库.csv")
     print(df)

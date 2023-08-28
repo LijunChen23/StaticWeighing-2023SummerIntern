@@ -1,3 +1,7 @@
+"""
+此代码服务于Tab0的主Tab
+"""
+
 import os
 import pyodbc
 from tkinter import filedialog, messagebox

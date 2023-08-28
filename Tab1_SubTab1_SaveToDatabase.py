@@ -1,3 +1,7 @@
+"""
+此代码服务于Tab1的子tab1。
+"""
+
 import numpy as np
 import pandas as pd
 import os
@@ -5,6 +9,7 @@ import pyodbc
 from tkinter import filedialog, messagebox
 
 
+# ======================================================================================================================
 def melt_dataframe(df):
     # 使用melt函数转换成1列多行的DataFrame
     dataframe_melted = df.melt(var_name="Columns")
@@ -13,7 +18,7 @@ def melt_dataframe(df):
     return dataframe_melted
 
 
-# 为dataframe添加第0行，即平均值，并将dataframe的内容保留三位小数
+# 为dataframe添加第0行，即平均值 ==========================================================================================
 def add_average_row(df):
     # 使用布尔索引过滤掉值为0的行，并计算剩余行的平均值
     mean_values = df[df != 0].mean()
@@ -30,7 +35,7 @@ def add_average_row(df):
     return dataframe_new
 
 
-# 计算中位值
+# 计算中位值 ============================================================================================================
 def calculate_median(df, shuttle_id_value, position):
     df_set_index = df.set_index(f"ShuttleIDPos{position}")
 
@@ -50,7 +55,7 @@ def calculate_median(df, shuttle_id_value, position):
     return median
 
 
-# 获取某一称重位置的所有小车ID的温度拟合线的斜率
+# 获取某一称重位置的所有小车ID的温度拟合线的斜率 =============================================================================
 def calculate_temp_slope(df, shuttle_id, position):
     value_count = df[f"ShuttleIDPos{position}"].value_counts()
     value_count = pd.DataFrame(value_count)
@@ -71,7 +76,7 @@ def calculate_temp_slope(df, shuttle_id, position):
     return temp_slope
 
 
-# 返回中位值数据的dataframe
+# 返回中位值数据的dataframe ==============================================================================================
 def get_df_median(df):
     # Create empty DataFrame to store the results
     rows_median = []
@@ -92,7 +97,7 @@ def get_df_median(df):
     return df_median_new
 
 
-# 返回标定系数数据的dataframe
+# 返回标定系数数据的dataframe ============================================================================================
 def get_df_factor(df_median, dividend1, dividend2, dividend3):
     # 创建新的DataFrame保存结果
     df_factor = df_median.copy()
@@ -106,7 +111,7 @@ def get_df_factor(df_median, dividend1, dividend2, dividend3):
     return df_factor
 
 
-# 返回斜率的dataframe
+# 返回斜率的dataframe ===================================================================================================
 def get_df_temp_slope(df):
     # Create empty DataFrame to store the results
     rows_temp_slope = []
@@ -129,6 +134,7 @@ def get_df_temp_slope(df):
     return dataframe_temp_slope
 
 
+# ======================================================================================================================
 def get_df_value(weigh_status, df):
     # 读取真实重量
     weigh_ref1 = df["WeighRef1"].unique()[0]
@@ -155,7 +161,7 @@ def get_df_value(weigh_status, df):
     return df_value.T
 
 
-# 生成坐标DataFrame
+# 生成坐标DataFrame =====================================================================================================
 def get_df_field():
     df_field = pd.DataFrame()
     categories = ["Weight6D", "Factor", "TempSlope"]
@@ -173,6 +179,7 @@ def get_df_field():
     return df_field.T
 
 
+# ======================================================================================================================
 def get_all_weigh_refs_filtering(df):
     # 删除所有"WeighRef1", "WeighRef2", "WeighRef3"列都为0的行
     df_filtered = df[(df["WeighRef1"] != 0) | (df["WeighRef2"] != 0) | (df["WeighRef3"] != 0)]
@@ -184,6 +191,7 @@ def get_all_weigh_refs_filtering(df):
     return df_weigh_ref_columns
 
 
+# ======================================================================================================================
 def get_all_weigh_refs_calibration(weigh_status, df):
     df_weigh_ref_columns = get_all_weigh_refs_filtering(df=df)
     df_all_weigh_ref = pd.DataFrame()
@@ -203,6 +211,7 @@ def get_all_weigh_refs_calibration(weigh_status, df):
     return df_all_weigh_ref
 
 
+# ======================================================================================================================
 def get_all_weigh_status_calibration(df):
     condition_status0 = (df["WeighEmptyStatus(0)"] == True) & \
                         (df["WeighEmptyStatus(1)"] == False) & \
@@ -242,7 +251,7 @@ def get_all_weigh_status_calibration(df):
     return df_all_weigh_status
 
 
-# 生成 SQL 更新一行标定数据的语句
+# 生成 SQL 更新一行标定数据的语句 ==========================================================================================
 def get_sql_for_creating_table(table_name, column_names):
     sql_body = "(ID AUTOINCREMENT, "
     for column_name in column_names:
@@ -252,7 +261,7 @@ def get_sql_for_creating_table(table_name, column_names):
     return sql
 
 
-# 存入数据库
+# 存入数据库 ============================================================================================================
 def get_sql_for_saving_row(table_name, column_names):
     sql_body = "("
     values = " VALUES ("
@@ -266,7 +275,8 @@ def get_sql_for_saving_row(table_name, column_names):
     return sql
 
 
-def save_to_db(conn, table_name, df, sql_save):
+# ======================================================================================================================
+def update_db(conn, table_name, df, sql_save):
     cursor = conn.cursor()
     # 获取数据库中的数据
     cursor.execute(f"SELECT * FROM {table_name}")
@@ -284,12 +294,12 @@ def save_to_db(conn, table_name, df, sql_save):
     cursor.close()
 
 
-def save(df, db_file_path, table_name):
+# ======================================================================================================================
+def update_process(df, db_file_path, table_name):
     db_file = os.path.abspath(db_file_path)
     # 连接数据库
     conn = pyodbc.connect(r"DRIVER={Microsoft Access Driver (*.mdb, *.accdb)}; DBQ=" + db_file + ";Uid=;Pwd=;")
-    # 连接成功后弹窗告知用户连接成功
-    messagebox.showinfo("提示", "数据库连接成功")
+    messagebox.showinfo("提示", "数据库连接成功")  # 连接成功后弹窗告知用户连接成功
 
     get_all_weigh_status_calibration(df=df)
     df_all_weigh_status = get_all_weigh_status_calibration(df=df)
@@ -299,28 +309,26 @@ def save(df, db_file_path, table_name):
     # 将 df_field 的值作为 df_all_weigh_status 的列名
     df_all_weigh_status.columns = df_field.values.flatten()
 
-    def check_if_table_exists(conn, table_name):
-        cursor = conn.cursor()
-        db_tables = cursor.tables(tableType="TABLE")  # 获取数据库中已经存在的表
-        table_exists = False
-        for table_info in db_tables:
-            if table_info.table_name == table_name:
-                table_exists = True
-        if not table_exists:
-            sql_create = get_sql_for_creating_table(table_name=table_name, column_names=df_field.values.flatten())
-            cursor.execute(sql_create)
-            cursor.close()
-    check_if_table_exists(conn=conn, table_name=table_name)
+    # 检查数据库中是否已经存在此表，若没有，则创建新表
+    cursor = conn.cursor()
+    db_tables = cursor.tables(tableType="TABLE")  # 获取数据库中已经存在的表
+    table_exists = False
+    for table_info in db_tables:
+        if table_info.table_name == table_name:
+            table_exists = True
+    if not table_exists:
+        sql_create = get_sql_for_creating_table(table_name=table_name, column_names=df_field.values.flatten())
+        cursor.execute(sql_create)
+    cursor.close()
 
+    # 获取sql储存行语句
     sql_save = get_sql_for_saving_row(table_name=table_name, column_names=df_field.values.flatten())
-    save_to_db(conn=conn, table_name=table_name, df=df_all_weigh_status, sql_save=sql_save)
+    # 更新数据库
+    update_db(conn=conn, table_name=table_name, df=df_all_weigh_status, sql_save=sql_save)
 
-    # 提交更改
-    conn.commit()
-    # 关闭数据库连接
-    conn.close()
-    # 连接成功后弹窗告知用户连接成功
-    messagebox.showinfo("提示", "已更新标定数据库")
+    conn.commit()                                 # 提交更改
+    conn.close()                                  # 关闭数据库连接
+    messagebox.showinfo("提示", "已更新标定数据库")  # 更新完毕后弹窗告知用户
 
 
 def main():
@@ -339,7 +347,7 @@ def main():
 
     df = pd.read_csv(r"C:\Users\21872\Desktop\calibration\机器1的所有数据.csv")
     table_name = "28A10168507"
-    save(df=df, db_file_path=db_file_path, table_name=table_name)
+    update_process(df=df, db_file_path=db_file_path, table_name=table_name)
 
 
 if __name__ == "__main__":

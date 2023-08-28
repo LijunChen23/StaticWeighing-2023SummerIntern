@@ -182,8 +182,8 @@ class InnerTab1:
     def update_database(self):
         db_file_path = self.db_listbox.get(0)
         # 以下代码返回数据库中的表格的dataframe
-        from Tab1_SubTab1_SaveToDatabase import save
-        save(df=self.df, db_file_path=db_file_path, table_name=self.table_name)
+        from Tab1_SubTab1_SaveToDatabase import update_process
+        update_process(df=self.df, db_file_path=db_file_path, table_name=self.table_name)
 
     # 根据下拉列表框中的选项，生成相应的折线图，放在图表框中 ===================================================================
     def show_weigh_status(self, event):

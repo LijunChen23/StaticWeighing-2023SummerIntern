@@ -1,7 +1,11 @@
+"""
+此代码服务于Tab1的子tab1。
+"""
+
 import pandas as pd
 
 
-# 为dataframe添加第0行，即平均值，并将dataframe的内容保留三位小数
+# 为dataframe添加第0行，即平均值，并将dataframe的内容保留三位小数 =============================================================
 def add_average_row(df):
     # 使用布尔索引过滤掉值为0的行，并计算剩余行的平均值
     mean_values = df[df != 0].mean()
@@ -19,7 +23,7 @@ def add_average_row(df):
     return df_new
 
 
-# 计算中位值
+# 计算中位值 ============================================================================================================
 def calculate_median(df, shuttle_id_value, position):
     df_set_index = df.set_index(f"ShuttleIDPos{position}")
 
@@ -39,7 +43,7 @@ def calculate_median(df, shuttle_id_value, position):
     return median
 
 
-# 计算平均值
+# 计算平均值 ============================================================================================================
 def calculate_average(df, shuttle_id_value, position):
     df_set_index = df.set_index(f"ShuttleIDPos{position}")
 
@@ -59,7 +63,7 @@ def calculate_average(df, shuttle_id_value, position):
     return average
 
 
-# 计算称重偏差
+# 计算称重偏差 ===========================================================================================================
 def calculate_diff(df, shuttle_id_value, position):
     df_set_index = df.set_index(f"ShuttleIDPos{position}")
 
@@ -80,6 +84,7 @@ def calculate_diff(df, shuttle_id_value, position):
     return diff
 
 
+# ======================================================================================================================
 def process_data(df, result):
     if result == "中位值":
         # Create empty DataFrame to store the results
@@ -90,10 +95,12 @@ def process_data(df, result):
             median_pos2 = calculate_median(df, shuttle_id, 2)
             median_pos3 = calculate_median(df, shuttle_id, 3)
 
-            rows_median.append({"小车ID": shuttle_id,
-                                "称重位置1(g)": median_pos1,
-                                "称重位置2(g)": median_pos2,
-                                "称重位置3(g)": median_pos3})
+            rows_median.append({
+                "小车ID": shuttle_id,
+                "称重位置1(g)": median_pos1,
+                "称重位置2(g)": median_pos2,
+                "称重位置3(g)": median_pos3}
+            )
 
         # Create the corresponding dataframe
         df_median = pd.DataFrame(rows_median)
@@ -104,6 +111,7 @@ def process_data(df, result):
         df_median_new["小车ID"] = df_median_new["小车ID"].astype(int).astype(str)
         return df_median_new
 
+    # ------------------------------------------------------------------------------------------------------------------
     if result == "平均值":
         # Create empty DataFrame to store the results
         rows_average = []
@@ -113,10 +121,12 @@ def process_data(df, result):
             average_pos2 = calculate_average(df, shuttle_id, 2)
             average_pos3 = calculate_average(df, shuttle_id, 3)
 
-            rows_average.append({"小车ID": shuttle_id,
-                                 "称重位置1(g)": average_pos1,
-                                 "称重位置2(g)": average_pos2,
-                                 "称重位置3(g)": average_pos3})
+            rows_average.append({
+                "小车ID": shuttle_id,
+                "称重位置1(g)": average_pos1,
+                "称重位置2(g)": average_pos2,
+                "称重位置3(g)": average_pos3}
+            )
 
         # Create the corresponding dataframe
         df_average = pd.DataFrame(rows_average)
@@ -127,6 +137,7 @@ def process_data(df, result):
         df_average_new["小车ID"] = df_average_new["小车ID"].astype(int).astype(str)
         return df_average_new
 
+    # ------------------------------------------------------------------------------------------------------------------
     if result == "称重偏差":
         # Create empty DataFrame to store the results
         rows_diff = []
@@ -136,10 +147,12 @@ def process_data(df, result):
             diff_pos2 = calculate_diff(df, shuttle_id, 2)
             diff_pos3 = calculate_diff(df, shuttle_id, 3)
 
-            rows_diff.append({"小车ID": shuttle_id,
-                              "称重位置1(g)": diff_pos1,
-                              "称重位置2(g)": diff_pos2,
-                              "称重位置3(g)": diff_pos3})
+            rows_diff.append({
+                "小车ID": shuttle_id,
+                "称重位置1(g)": diff_pos1,
+                "称重位置2(g)": diff_pos2,
+                "称重位置3(g)": diff_pos3}
+            )
 
         # Create the corresponding dataframe
         df_diff = pd.DataFrame(rows_diff)
@@ -151,6 +164,7 @@ def process_data(df, result):
         return df_diff_new
 
 
+# ======================================================================================================================
 def main():
     df = pd.read_csv(r"C:\Users\21872\Desktop\calibration\称重数据.csv")
     df_median = process_data(df, "中位值")

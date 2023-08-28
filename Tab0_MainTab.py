@@ -109,7 +109,7 @@ class WeighingDataTab:
         db_file_path = self.db_listbox.get(0)
         csv_files = self.csv_listbox.get(0, tk.END)  # 获取所有 CSV 文件路径
 
-        from Tab0_SaveToDatabase import save_csv_to_db  # 导入存数据库.py文件，确保文件位于相同目录下
+        from Tab0_MainTab_SaveToDatabase import save_csv_to_db  # 导入存数据库.py文件，确保文件位于相同目录下
         save_csv_to_db(db_file_path, csv_files)  # 将文件存入数据库
 
         messagebox.showinfo("提示", "已储存数据")
