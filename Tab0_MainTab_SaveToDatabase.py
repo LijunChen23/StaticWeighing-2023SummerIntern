@@ -66,78 +66,72 @@ def get_timestamps_from_db(conn, table_name):
 
 
 ########################################################################################################################
-def save_csv_to_db(db_path, csv_files):
-    # 连接数据库
-    db_file = os.path.abspath(db_path)
-    conn = pyodbc.connect(r"DRIVER={Microsoft Access Driver (*.mdb, *.accdb)}; DBQ=" + db_file + ";Uid=;Pwd=;")
-    messagebox.showinfo("提示", "数据库连接成功")  # 连接成功后弹窗告知用户连接成功
+def save_csv_to_db(conn, csv_file):
 
-    # 使用for循环处理所有csv文件
-    for csv_file in csv_files:
-        from Tab0_SortCSVFile import sort_dataframe
-        df, controller_serial_no = sort_dataframe(csv_file)  # 使用外接function来处理csv数据
+    from Tab0_SortCSVFile import sort_dataframe
+    df, controller_serial_no = sort_dataframe(csv_file)  # 使用外接function来处理csv数据
 
-        # ==============================================================================================================
-        if not controller_serial_no:  # 如果文件里没有写controller_serial_no，则在文件名中读取
-            if "Line1" in csv_file:
-                controller_serial_no = "28A10168507"
-            elif "Line2" in csv_file:
-                controller_serial_no = "28A10168515"
+    # ==============================================================================================================
+    if not controller_serial_no:  # 如果文件里没有写controller_serial_no，则在文件名中读取
+        if "Line1" in csv_file:
+            controller_serial_no = "28A10168507"
+        elif "Line2" in csv_file:
+            controller_serial_no = "28A10168515"
 
-        # ==============================================================================================================
-        if controller_serial_no:  # 如果有明确的controller serial number
-            # 检查表是否在数据库中，不在则创建表
-            check_if_table_exists(conn=conn, table_name=controller_serial_no)
-            # 获取sql语句
-            sql_save_row = get_sql_for_saving_a_row(df=df, table_name=controller_serial_no)
+    # ==============================================================================================================
+    if controller_serial_no:  # 如果有明确的controller serial number
+        # 检查表是否在数据库中，不在则创建表
+        check_if_table_exists(conn=conn, table_name=controller_serial_no)
+        # 获取sql语句
+        sql_save_row = get_sql_for_saving_a_row(df=df, table_name=controller_serial_no)
 
-            # 读取一个csv文件中有几条数据
-            num_df_rows = df.shape[0]
-            num_saved_rows = 0
-            # 将DataFrame中的数据存储进Access数据库中新建的表格内
-            for index, row in df.iterrows():
+        # 读取一个csv文件中有几条数据
+        num_df_rows = df.shape[0]
+        num_saved_rows = 0
+        # 将DataFrame中的数据存储进Access数据库中新建的表格内
+        for index, row in df.iterrows():
 
-                cursor = conn.cursor()
-                # ------------------------------------------------------------------------------------------------------
-                timestamp = row["TimeStamp"]  # 获取dataframe中某一行的"TimeStamp"所对应的值
-                if timestamp != "" and timestamp != "1970-01-01 00:00:00":
-                    timestamps = get_timestamps_from_db(conn=conn, table_name=controller_serial_no)
-                    if timestamp not in timestamps:
-                        # 执行SQL语句，储存这一行数据
-                        conn.execute(sql_save_row, *row)
-                        conn.commit()
-                        num_saved_rows = num_saved_rows + 1
-                # ------------------------------------------------------------------------------------------------------
-                else:
-                    # 对于其他情况，检查row[4:19]是否在数据库中存在
-                    cursor.execute(
-                        f"SELECT * FROM `{controller_serial_no}` "
-                        f"WHERE WeighEmptyPos1 =? AND WeighEmptyPos2=? AND WeighEmptyPos3=? "
-                        f"AND WeighFullPos1=? AND WeighFullPos2=? AND WeighFullPos3=? "
-                        f"AND WeighRelative1=? AND WeighRelative2=? AND WeighRelative3=? "
-                        f"AND WeighResult1=? AND WeighResult2=? AND WeighResult3=?;",
-                        tuple(row[8:20])
-                    )
-                    if not cursor.fetchall():
-                        # 执行SQL语句，储存这一行数据
-                        conn.execute(sql_save_row, *row)
-                        conn.commit()
-                        num_saved_rows = num_saved_rows + 1
-                cursor.close()
-            # ----------------------------------------------------------------------------------------------------------
-            # 弹窗告知用户哪个 CSV 文件已储存完毕
-            message = f"文件 {csv_file} 已储存\n" \
-                      f"该文件含有{num_df_rows}条有效数据\n" \
-                      f"储存了{num_saved_rows}条数据\n" \
-                      f"剩余{num_df_rows - num_saved_rows}条数据没有被储存，因为其已存在于数据库中"
-            messagebox.showinfo("文件已储存", message)
-        else:  # 如果没有明确的controller serial number
-            message = f"文件 {csv_file} 未储存\n" \
-                      f"原因：未获取控制器序列号"
-            messagebox.showinfo("文件未储存", message)
+            cursor = conn.cursor()
+            # ------------------------------------------------------------------------------------------------------
+            timestamp = row["TimeStamp"]  # 获取dataframe中某一行的"TimeStamp"所对应的值
+            if timestamp != "" and timestamp != "1970-01-01 00:00:00":
+                timestamps = get_timestamps_from_db(conn=conn, table_name=controller_serial_no)
+                if timestamp not in timestamps:
+                    # 执行SQL语句，储存这一行数据
+                    conn.execute(sql_save_row, *row)
+                    conn.commit()
+                    num_saved_rows = num_saved_rows + 1
+            # ------------------------------------------------------------------------------------------------------
+            else:
+                # 对于其他情况，检查row[4:19]是否在数据库中存在
+                cursor.execute(
+                    f"SELECT * FROM `{controller_serial_no}` "
+                    f"WHERE WeighEmptyPos1 =? AND WeighEmptyPos2=? AND WeighEmptyPos3=? "
+                    f"AND WeighFullPos1=? AND WeighFullPos2=? AND WeighFullPos3=? "
+                    f"AND WeighRelative1=? AND WeighRelative2=? AND WeighRelative3=? "
+                    f"AND WeighResult1=? AND WeighResult2=? AND WeighResult3=?;",
+                    tuple(row[8:20])
+                )
+                if not cursor.fetchall():
+                    # 执行SQL语句，储存这一行数据
+                    conn.execute(sql_save_row, *row)
+                    conn.commit()
+                    num_saved_rows = num_saved_rows + 1
+            cursor.close()
+        # ----------------------------------------------------------------------------------------------------------
+        # 弹窗告知用户哪个 CSV 文件已储存完毕
+        if num_df_rows == num_saved_rows:
+            message = f"文件 {csv_file} 含有{num_df_rows}条数据。\n" \
+                      f"储存了{num_saved_rows}条数据\n"
+        else:
+            message = f"文件 {csv_file} 含有{num_df_rows}条数据。\n" \
+                      f"储存了{num_saved_rows}条数据，" \
+                      f"剩余{num_df_rows - num_saved_rows}条数据没有被储存，因为其已存在于数据库中\n"
+    else:  # 如果没有明确的controller serial number
+        message = f"文件 {csv_file} 未储存\n" \
+                  f"原因：未获取控制器序列号"
 
-    conn.commit()  # 提交更改
-    conn.close()  # 关闭数据库连接
+    return message
 
 
 ########################################################################################################################
@@ -162,7 +156,7 @@ def main():
     if not db_file_path:
         sys.exit("Program terminated: No database file selected.")
 
-    save_csv_to_db(db_file_path, csv_files)
+    #save_csv_files_to_db(db_file_path, csv_files)
 
 
 if __name__ == "__main__":
