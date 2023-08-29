@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import pandas as pd
 import tkinter as tk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 from tkinter import ttk
@@ -9,12 +10,12 @@ class InnerTab2:
         self.inner_tab2 = tk.Frame(parent_tab, bg="whitesmoke")
 
         self.plot_frame = None
-        self.weigh_pos_dropdown = None
+        self.weigh_pos_checkboxes = []
         self.pos_weight_mapping = {
             "称重位置1": "WeighRelative1",
             "称重位置2": "WeighRelative2",
             "称重位置3": "WeighRelative3"
-                                   }
+        }
         self.table_name = None
         self.filtered_df = None
 
@@ -34,11 +35,16 @@ class InnerTab2:
         weigh_pos_label = ttk.Label(self.inner_tab2, text="称重位置：", font=("SimHei", 12), style="Sub_tab.TLabel")
         weigh_pos_label.grid(row=2, column=0, padx=5, pady=5, sticky="e")
 
-        # 创建”称重位置“下拉列表框
-        self.weigh_pos_dropdown = ttk.Combobox(self.inner_tab2, values=list(self.pos_weight_mapping.keys()),
-                                               state="readonly", font=("SimHei", 12))
-        self.weigh_pos_dropdown.grid(row=2, column=1, padx=5, pady=5, sticky="w")
-        self.weigh_pos_dropdown.bind("<<ComboboxSelected>>", self.generate_data)
+        # 创建多选框列表框
+        row = 2
+        for pos_label in self.pos_weight_mapping.keys():
+            checkbox_var = tk.IntVar()
+            checkbox = ttk.Checkbutton(self.inner_tab2, text=pos_label, variable=checkbox_var, onvalue=1, offvalue=0,
+                                       command=self.generate_data)
+            checkbox.grid(row=row, column=1, padx=5, pady=5, sticky="w")
+            #checkbox.bind("<Button-1>", self.generate_data)  # Bind the generate_data method to checkbox click event
+            self.weigh_pos_checkboxes.append((pos_label, checkbox_var))
+            row += 1
 
         # 辅助排版 ------------------------------------------------------------------------------------------------------
         self.inner_tab2.grid_rowconfigure(0, weight=1)  # Empty row at the top
@@ -50,44 +56,48 @@ class InnerTab2:
     def update_content(self, df, controller_serial_number):
         self.table_name = controller_serial_number
         self.filtered_df = df[(df["WeighRef1"] == 0) & (df["WeighRef2"] == 0) & (df["WeighRef3"] == 0)]
+        print(self.filtered_df)
         self.clear_plot()
-        self.weigh_pos_dropdown.set("")
+        for _, var in self.weigh_pos_checkboxes:
+            var.set(0)
 
     # 生成”称重次数vs相对重量“的散点图 ======================================================================================
-    def generate_data(self, event):
-        selected_option = self.weigh_pos_dropdown.get()            # 获取选择的选项
-        selected_value = self.pos_weight_mapping[selected_option]  # 获取对应的值
+    def generate_data(self):
+        selected_values = [pos_label for pos_label, var in self.weigh_pos_checkboxes if var.get() == 1]
+        print(selected_values)
+        self.clear_plot()
 
-        self.clear_plot()  # 清空图表框，以用于显示表格
+        if selected_values:
+            plt.rcParams["font.sans-serif"] = "SimHei"  # 设置字体为简体中文黑体
+            plt.rcParams["axes.unicode_minus"] = False  # 解决负号无法正常显示的问题
+            plt.figure(figsize=(9, 4))
+            '''for selected_value in selected_values:
+                weigh_relative_list = self.filtered_df[self.pos_weight_mapping[selected_value]].tolist()
+                timestamp_list = pd.to_datetime(self.filtered_df["Timestamp"]).tolist()
+                plt.plot(timestamp_list, weigh_relative_list, marker='o', label=selected_value)'''
 
-        # 读取 "WeighRelative1"、"WeighRelative2" 和 "WeighRelative3" 列的值，并存入对应的列表中
-        weigh_relative_list = self.filtered_df[selected_value].tolist()
+            for selected_value in selected_values:
+                weigh_relative_list = self.filtered_df[self.pos_weight_mapping[selected_value]].tolist()
+                count_list = list(range(1, len(weigh_relative_list) + 1))
+                plt.scatter(count_list, weigh_relative_list, label=selected_value, s=5)
 
-        # 创建称重次数列表
-        count_list = list(range(1, len(weigh_relative_list) + 1))
+            plt.xlabel("时间戳")
+            plt.ylabel("相对重量")
+            plt.title("相对重量随时间变化")
+            plt.legend()
+            #plt.xticks(rotation=45)
+            plt.tight_layout()
 
-        plt.rcParams["font.sans-serif"] = "SimHei"  # 设置字体为简体中文黑体
-        plt.rcParams["axes.unicode_minus"] = False  # 解决负号无法正常显示的问题
-        # 绘制散点图
-        plt.figure(figsize=(9, 4))
-        plt.scatter(count_list, weigh_relative_list)
-        plt.xlabel("称重次数")
-        plt.ylabel("相对重量")
-        plt.title("称重次数vs相对重量")
-        plt.tight_layout()
+            canvas = FigureCanvasTkAgg(plt.gcf(), master=self.plot_frame)
+            canvas.get_tk_widget().configure(width=900, height=345)
+            canvas.draw()
 
-        # 创建一个 Tkinter 可以容纳 Matplotlib 图形的画布 (canvas)
-        canvas = FigureCanvasTkAgg(plt.gcf(), master=self.plot_frame)  # plt.gcf() 返回当前的 Matplotlib 图形对象
-        canvas.get_tk_widget().configure(width=900, height=345)        # 设置画布大小
-        canvas.draw()                                                  # 调用画布的 draw 方法，以绘制图形。
-        # 添加导航工具栏
-        toolbar_frame = tk.Frame(master=self.plot_frame, bg="white")
-        toolbar = NavigationToolbar2Tk(canvas, toolbar_frame)
-        toolbar.update()
-        toolbar.configure(background="white")  # 设置工具栏背景颜色为白色
-        # 将canvas和滚动条放置在GUI中
-        canvas.get_tk_widget().grid(row=0, column=0, padx=5, pady=5, sticky="nsew")
-        toolbar_frame.grid(row=1, column=0, padx=5, pady=5, sticky="nsew")
+            toolbar_frame = tk.Frame(master=self.plot_frame, bg="white")
+            toolbar = NavigationToolbar2Tk(canvas, toolbar_frame)
+            toolbar.update()
+            toolbar.configure(background="white")
+            canvas.get_tk_widget().grid(row=0, column=0, padx=5, pady=5, sticky="nsew")
+            toolbar_frame.grid(row=1, column=0, padx=5, pady=5, sticky="nsew")
 
     # 清空图表框 ========================================================================================================
     def clear_plot(self):
