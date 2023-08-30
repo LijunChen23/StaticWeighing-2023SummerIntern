@@ -62,13 +62,9 @@ class InnerTab0:
             plt.yticks(fontsize=8)
             plt.tight_layout()
 
-            # 创建一个 Tkinter 可以容纳 Matplotlib 图形的画布（canvas）。
-            # plt.gcf() 返回当前的 Matplotlib 图形对象，master=self.plot_frame 则指定了画布的父容器，即创建的 GUI 中用于显示图形的框。
-            canvas = FigureCanvasTkAgg(plt.gcf(), master=self.plot_frame)
-            # canvas.draw() 调用画布的 draw 方法，以绘制图形。
-            canvas.draw()
+            canvas = FigureCanvasTkAgg(plt.gcf(), master=self.plot_frame)  # plt.gcf() 返回当前的 Matplotlib 图形对象
+            canvas.draw()  # canvas.draw() 调用画布的 draw 方法，以绘制图形。
             # 获取画布的 Tkinter 控件（widget）并将其使用 pack 方法放置在 GUI 窗口中。
-            # fill=tk.BOTH 和 expand=True 参数会使图形自动填充和扩展以适应父容器的大小，确保图形在 GUI 窗口中正确显示。
             canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
 
     # 清空图表框 =========================================================================================================

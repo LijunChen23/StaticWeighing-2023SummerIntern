@@ -138,25 +138,21 @@ class InnerTab1:
 
     # ==================================================================================================================
     def create_options1(self, options):
-        # Create a custom style for the button
         style = ttk.Style()
-        # Create a custom style for the checkbutton
         style.configure("Sub_tab.TCheckbutton", font=("SimHei", 12), padding=(5, 5),
                         background="white", foreground="black")
-        # Create a custom style for the canvas frame
         style.configure("CanvasFrame.TFrame", background="white")
 
-        """创建Canvas控件"""
-        # 创建了一个 Canvas 控件，放置在 Tkinter Frame 控件中
+        # 创建Canvas控件 ------------------------------------------------------------------------------------------------
         canvas1 = tk.Canvas(master=self.plot_frame0, bg="white", width=200, height=150, takefocus=False)
         canvas1.grid(row=0, column=0, sticky="nsew")
 
-        """创建垂直滚动条"""
+        # 创建垂直滚动条 -------------------------------------------------------------------------------------------------
         scrollbar1 = ttk.Scrollbar(self.plot_frame0, orient="vertical", command=canvas1.yview)
         scrollbar1.grid(row=0, column=1, sticky="ns")
         canvas1.configure(yscrollcommand=scrollbar1.set)
 
-        """创建Canvas内部Frame"""
+        # 创建Canvas内部Frame -------------------------------------------------------------------------------------------
         canvas1_frame = ttk.Frame(canvas1, takefocus=False, style="CanvasFrame.TFrame")
         canvas1.create_window((0, 0), window=canvas1_frame, anchor="nw")
 
@@ -170,31 +166,23 @@ class InnerTab1:
 
     # ==================================================================================================================
     def create_options2(self, options):
-        # Create a custom style for the button
         style = ttk.Style()
-        # Create a custom style for the checkbutton
         style.configure("Sub_tab.TCheckbutton", font=("SimHei", 12), padding=(5, 5),
                         background="white", foreground="black")
-        # Create a custom style for the canvas frame
         style.configure("CanvasFrame.TFrame", background="white")
 
-        """创建Canvas控件"""
-        # 创建了一个 Canvas 控件，放置在 Tkinter Frame 控件中
+        # 创建Canvas控件 ------------------------------------------------------------------------------------------------
         canvas2 = tk.Canvas(master=self.plot_frame3, bg="white", width=200, height=150, takefocus=False)
-        # side="left" 表示将 Canvas 放置在 Frame 的左侧。
-        # fill=tk.BOTH 表示 Canvas 应该填充 Frame 中的所有可用空间，包括水平和垂直方向。
-        # expand=True 表示当 Frame 大小变化时，Canvas 应该扩展以填充所有可用空间。
         canvas2.grid(row=0, column=0, sticky="nsew")
 
-        """创建垂直滚动条"""
+        # 创建垂直滚动条 -------------------------------------------------------------------------------------------------
         # orient="vertical" 表示垂直方向的滚动条。command=canvas.yview 设置了滚动条与 Canvas 的垂直滚动联动
         scrollbar2 = ttk.Scrollbar(self.plot_frame3, orient="vertical", command=canvas2.yview)
-        # side="right" 表示将滚动条放置在 Frame 的右侧。fill="y" 表示滚动条在垂直方向上填充整个可用空间。
         scrollbar2.grid(row=0, column=1, sticky="ns")
         # yscrollcommand=scrollbar.set 表示将滚动条的位置信息传递给 Canvas，以便 Canvas 根据滚动条的位置进行垂直滚动。
         canvas2.configure(yscrollcommand=scrollbar2.set)
 
-        """创建Canvas内部Frame"""
+        # 创建Canvas内部Frame -------------------------------------------------------------------------------------------
         # 创建了一个内部的 Frame，用于在 Canvas 中放置图表
         canvas2_frame = ttk.Frame(canvas2, takefocus=False, style="CanvasFrame.TFrame")
         # 在 Canvas 中创建一个窗口，将内部的 Frame 放置在窗口内，以实现在 Canvas 中滚动 Frame。
