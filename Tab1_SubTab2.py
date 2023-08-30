@@ -14,8 +14,17 @@ class InnerTab2:
         self.frame_shuttle_id = None
         self.weigh_pos_checkboxes = []
         self.shuttle_id_checkboxes = []
+        self.weigh_status_checkboxes = []
         self.table_name = None
         self.time_filtered_df = None
+        self.status_descriptions = {
+            "[0]: Empty: Clean 0, Photo 0\n     Full:  Clean 0, Photo 0": 0,
+            "[1]: Empty: Clean 0, Photo 0\n     Full:  Clean 1, Photo 0": 1,
+            "[2]: Empty: Clean 0, Photo 1\n     Full:  Clean 1, Photo 1": 2,
+            "[3]: Empty: Clean 0, Photo 1\n     Full:  Clean 0, Photo 1": 3,
+            "[4]: Empty: Clean 1, Photo 0\n     Full:  Clean 1, Photo 0": 4,
+            "[5]: Empty: Clean 1, Photo 1\n     Full:  Clean 1, Photo 1": 5
+        }
 
         self.create_widgets()
 
@@ -30,7 +39,7 @@ class InnerTab2:
 
         # 创建一个框用于展示散点图 -----------------------------------------------------------------------------------------
         self.plot_frame = tk.Frame(self.inner_tab2, bg="white", width=900, height=400)
-        self.plot_frame.grid(row=1, column=1, columnspan=4, padx=40, pady=5, sticky="s")
+        self.plot_frame.grid(row=1, column=1, columnspan=6, padx=40, pady=5, sticky="s")
         self.plot_frame.grid_propagate(False)  # 设置为0可使组件大小不变
 
         # 创建”小车id“标签 -----------------------------------------------------------------------------------------------
@@ -53,11 +62,21 @@ class InnerTab2:
         self.frame_weigh_pos.grid(row=2, column=4, padx=5, pady=5, sticky="w")
         self.create_weigh_pos_options()
 
+        # 创建”称重状态“标签 ---------------------------------------------------------------------------------------------
+        weigh_status_label = ttk.Label(self.inner_tab2, text="称重状态：", font=("SimHei", 12), style="Sub_tab.TLabel")
+        weigh_status_label.grid(row=2, column=5, padx=5, pady=5, sticky="e")
+
+        # 创建一个frame
+        self.frame_weigh_status = tk.Frame(self.inner_tab2, bg="white", width=280, height=86,
+                                           takefocus=False, borderwidth=1, relief="solid")
+        self.frame_weigh_status.grid(row=2, column=6, padx=5, pady=5, sticky="w")
+        self.create_weigh_status_options()
+
         # 辅助排版 ------------------------------------------------------------------------------------------------------
         self.inner_tab2.grid_rowconfigure(0, weight=1)  # Empty row at the top
         self.inner_tab2.grid_rowconfigure(3, weight=1)  # Empty row at the end
         self.inner_tab2.grid_columnconfigure(0, weight=1)
-        self.inner_tab2.grid_columnconfigure(5, weight=1)
+        self.inner_tab2.grid_columnconfigure(7, weight=1)
 
     # 清空图表框 ========================================================================================================
     def clear_plot(self):
@@ -65,7 +84,7 @@ class InnerTab2:
         plt.clf()         # 清除之前绘图
         self.plot_frame.destroy()
         self.plot_frame = tk.Frame(self.inner_tab2, bg="white", width=900, height=400)
-        self.plot_frame.grid(row=1, column=1, columnspan=4, padx=40, pady=5, sticky="n")
+        self.plot_frame.grid(row=1, column=1, columnspan=6, padx=40, pady=5, sticky="n")
         self.plot_frame.grid_propagate(False)  # 设置为0可使组件大小不变
 
     # 更新InnerTab2的内容 ===============================================================================================
@@ -82,12 +101,27 @@ class InnerTab2:
         ]
         print(self.time_filtered_df)
         self.clear_plot()
-        for _, var in self.weigh_pos_checkboxes:
-            var.set(0)
+        #for _, var in self.weigh_pos_checkboxes:
+            #var.set(0)
+
+    # ==================================================================================================================
+    def create_shuttle_id_options(self):
+        row = 0
+        col = 0
+        # 创建一个多选框列表，包含整数1到16的选项
+        for i in range(1, 17):
+            checkbox_var = tk.IntVar()
+            checkbox = ttk.Checkbutton(self.frame_shuttle_id, text=str(i), variable=checkbox_var,
+                                       onvalue=1, offvalue=0, command=self.generate_data, style="Sub_tab.TCheckbutton")
+            checkbox.grid(row=row, column=col, sticky="w")
+            self.shuttle_id_checkboxes.append((i, checkbox_var))
+            row += 1
+            if row >= 4:  # 每行放4个选项
+                row = 0
+                col += 1
 
     # ==================================================================================================================
     def create_weigh_pos_options(self):
-        # 创建“称重位置”多选框列表框 --------------------------------------------------------------------------------------
         row = 0
         pos_labels = ["称重位置1", "称重位置2", "称重位置3"]
         for pos_label in pos_labels:
@@ -99,37 +133,36 @@ class InnerTab2:
             row += 1
 
     # ==================================================================================================================
-    def create_shuttle_id_options(self):
-        style = ttk.Style()
-        style.configure("Sub_tab.TCheckbutton", font=("SimHei", 12), padding=(5, 5),
-                        background="white", foreground="black")
-        style.configure("CanvasFrame.TFrame", background="white")
-
+    def create_weigh_status_options(self):
         # 创建Canvas控件 ------------------------------------------------------------------------------------------------
-        canvas_shuttle_id = tk.Canvas(master=self.frame_shuttle_id, bg="white", width=85, height=86, takefocus=False)
-        canvas_shuttle_id.grid(row=0, column=0, sticky="nsew")
+        canvas_weigh_status = tk.Canvas(master=self.frame_weigh_status, bg="white",
+                                        width=262, height=86, takefocus=False)
+        canvas_weigh_status.grid(row=0, column=0, sticky="nsew")
 
         # 创建垂直滚动条 -------------------------------------------------------------------------------------------------
-        scrollbar_shuttle_id = ttk.Scrollbar(self.frame_shuttle_id, orient="vertical", command=canvas_shuttle_id.yview)
-        scrollbar_shuttle_id.grid(row=0, column=1, sticky="ns")
-        canvas_shuttle_id.configure(yscrollcommand=scrollbar_shuttle_id.set)
+        scrollbar_weigh_status = ttk.Scrollbar(self.frame_weigh_status, orient="vertical",
+                                               command=canvas_weigh_status.yview)
+        scrollbar_weigh_status.grid(row=0, column=1, sticky="ns")
+        canvas_weigh_status.configure(yscrollcommand=scrollbar_weigh_status.set)
 
         # 创建Canvas内部Frame -------------------------------------------------------------------------------------------
-        frame_canvas_shuttle_id = ttk.Frame(canvas_shuttle_id, takefocus=False, style="CanvasFrame.TFrame")
-        canvas_shuttle_id.create_window((0, 0), window=frame_canvas_shuttle_id, anchor="nw")
+        frame_canvas_weigh_status = ttk.Frame(canvas_weigh_status, takefocus=False, style="CanvasFrame.TFrame")
+        canvas_weigh_status.create_window((0, 0), window=frame_canvas_weigh_status, anchor="nw")
 
         row = 0
-        # 创建一个多选框列表，包含整数1到16的选项
-        for i in range(1, 17):
+
+        for status_description, status in self.status_descriptions.items():
             checkbox_var = tk.IntVar()
-            checkbox = ttk.Checkbutton(frame_canvas_shuttle_id, text=str(i), variable=checkbox_var,
-                                       onvalue=1, offvalue=0, command=self.generate_data, style="Sub_tab.TCheckbutton")
+            checkbox = ttk.Checkbutton(
+                frame_canvas_weigh_status, text=status_description, variable=checkbox_var,
+                onvalue=1, offvalue=0, command=self.generate_data, style="Sub_tab.TCheckbutton"
+            )
             checkbox.grid(row=row, column=0, sticky="w")
-            self.shuttle_id_checkboxes.append((i, checkbox_var))
+            self.weigh_status_checkboxes.append((status, checkbox_var))
             row += 1
 
-        frame_canvas_shuttle_id.bind(
-            "<Configure>", lambda event: canvas_shuttle_id.configure(scrollregion=canvas_shuttle_id.bbox("all"))
+        frame_canvas_weigh_status.bind(
+            "<Configure>", lambda event: canvas_weigh_status.configure(scrollregion=canvas_weigh_status.bbox("all"))
         )
 
     # 生成”称重次数vs相对重量“的散点图 =====================================================================================
@@ -138,6 +171,8 @@ class InnerTab2:
             pos_label.strip("称重位置") for pos_label, var in self.weigh_pos_checkboxes if var.get() == 1]
         selected_shuttle_ids = [
             int(float(shuttle_id)) for shuttle_id, var in self.shuttle_id_checkboxes if var.get() == 1]
+        selected_statuses = [status for status, var in self.weigh_status_checkboxes if var.get() == 1]
+        print(selected_statuses)
         self.clear_plot()
 
         if selected_poss and selected_shuttle_ids:

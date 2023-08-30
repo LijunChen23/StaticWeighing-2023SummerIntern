@@ -21,13 +21,17 @@ class InnerTab1:
         self.df = None
         self.table_name = None
         self.condition_status0 = None
+        self.condition_status1 = None
+        self.condition_status2 = None
         self.condition_status3 = None
+        self.condition_status4 = None
+        self.condition_status5 = None
         self.df_status_filtered = None
         self.status_description_mapping = {
             "Status[0]": "Empty: Clean 0, Photo 0\nFull:  Clean 0, Photo 0",
             "Status[1]": "Empty: Clean 0, Photo 0\nFull:  Clean 1, Photo 0",
-            "Status[2]": "Empty: Clean 0, Photo 1\nFull:  Clean 0, Photo 1",
-            "Status[3]": "Empty: Clean 0, Photo 1\nFull:  Clean 1, Photo 1",
+            "Status[2]": "Empty: Clean 0, Photo 1\nFull:  Clean 1, Photo 1",
+            "Status[3]": "Empty: Clean 0, Photo 1\nFull:  Clean 0, Photo 1",
             "Status[4]": "Empty: Clean 1, Photo 0\nFull:  Clean 1, Photo 0",
             "Status[5]": "Empty: Clean 1, Photo 1\nFull:  Clean 1, Photo 1"
         }
@@ -109,6 +113,7 @@ class InnerTab1:
         # 创建一个框用于展示折线图 -----------------------------------------------------------------------------------------
         self.plot_frame = tk.Frame(self.inner_tab1, bg="white", width=730, height=400)
         self.plot_frame.grid(row=1, column=2, rowspan=6, columnspan=4, padx=5, pady=5, sticky="w")
+        self.plot_frame.grid_propagate(False)  # 设置为0可使组件大小不变
 
         # 辅助排版 ------------------------------------------------------------------------------------------------------
         self.inner_tab1.grid_rowconfigure(4, weight=1)
@@ -119,37 +124,50 @@ class InnerTab1:
     # ==================================================================================================================
     def update_content(self, df, controller_serial_number):
         # 更新InnerTab1的内容
-        self.df = df
         self.table_name = controller_serial_number
-        self.condition_status0 = (self.df["WeighEmptyStatus(0)"] == True) & \
-                                 (self.df["WeighEmptyStatus(1)"] == False) & \
-                                 (self.df["WeighEmptyStatus(2)"] == False) & \
-                                 (self.df["WeighEmptyStatus(3)"] == True) & \
-                                 (self.df["WeighEmptyStatus(4)"] == True) & \
-                                 (self.df["WeighFullStatus(0)"] == True) & \
-                                 (self.df["WeighFullStatus(1)"] == False) & \
-                                 (self.df["WeighFullStatus(2)"] == False) & \
-                                 (self.df["WeighFullStatus(3)"] == True) & \
-                                 (self.df["WeighFullStatus(4)"] == True)
 
-        self.condition_status3 = (self.df["WeighEmptyStatus(0)"] == True) & \
-                                 (self.df["WeighEmptyStatus(1)"] == False) & \
-                                 (self.df["WeighEmptyStatus(2)"] == True) & \
-                                 (self.df["WeighEmptyStatus(3)"] == False) & \
-                                 (self.df["WeighEmptyStatus(4)"] == True) & \
-                                 (self.df["WeighFullStatus(0)"] == True) & \
-                                 (self.df["WeighFullStatus(1)"] == False) & \
-                                 (self.df["WeighFullStatus(2)"] == True) & \
-                                 (self.df["WeighFullStatus(3)"] == False) & \
-                                 (self.df["WeighFullStatus(4)"] == True)
+        print(f"df: {df}")
+        columns_to_check = [
+            "WeighEmptyStatus(0)", "WeighEmptyStatus(1)", "WeighEmptyStatus(2)", "WeighEmptyStatus(3)",
+            "WeighEmptyStatus(4)", "WeighFullStatus(0)", "WeighFullStatus(1)", "WeighFullStatus(2)",
+            "WeighFullStatus(3)", "WeighFullStatus(4)"
+        ]
+        self.df = df[~(df[columns_to_check] == False).all(axis=1)]
+        print(f"self.df: {self.df}")
+
+        self.condition_status0 = \
+            (self.df["WeighEmptyStatus(1)"] == False) & (self.df["WeighEmptyStatus(2)"] == False) & \
+            (self.df["WeighFullStatus(1)"] == False) & (self.df["WeighFullStatus(2)"] == False)
+        self.condition_status1 = \
+            (self.df["WeighEmptyStatus(1)"] == False) & (self.df["WeighEmptyStatus(2)"] == False) & \
+            (self.df["WeighFullStatus(1)"] == True) & (self.df["WeighFullStatus(2)"] == False)
+        self.condition_status2 = \
+            (self.df["WeighEmptyStatus(1)"] == False) & (self.df["WeighEmptyStatus(2)"] == True) & \
+            (self.df["WeighFullStatus(1)"] == True) & (self.df["WeighFullStatus(2)"] == True)
+        self.condition_status3 = \
+            (self.df["WeighEmptyStatus(1)"] == False) & (self.df["WeighEmptyStatus(2)"] == True) & \
+            (self.df["WeighFullStatus(1)"] == False) & (self.df["WeighFullStatus(2)"] == True)
+        self.condition_status4 = \
+            (self.df["WeighEmptyStatus(1)"] == True) & (self.df["WeighEmptyStatus(2)"] == False) & \
+            (self.df["WeighFullStatus(1)"] == True) & (self.df["WeighFullStatus(2)"] == False)
+        self.condition_status5 = \
+            (self.df["WeighEmptyStatus(1)"] == True) & (self.df["WeighEmptyStatus(2)"] == True) & \
+            (self.df["WeighFullStatus(1)"] == True) & (self.df["WeighFullStatus(2)"] == True)
 
         list_weigh_status = []
         # 检查是否满足 condition_status0 或 condition_status3 中的任意一个条件
         if any([self.condition_status0.any()]):
             list_weigh_status.append(0)
+        if any([self.condition_status1.any()]):
+            list_weigh_status.append(1)
+        if any([self.condition_status2.any()]):
+            list_weigh_status.append(2)
         if any([self.condition_status3.any()]):
             list_weigh_status.append(3)
-        print(list_weigh_status)
+        if any([self.condition_status4.any()]):
+            list_weigh_status.append(4)
+        if any([self.condition_status5.any()]):
+            list_weigh_status.append(5)
 
         self.weigh_status_dropdown.set("")
         self.weigh_status_dropdown.config(values=[f"Status[{item}]" for item in list_weigh_status], state="readonly")
@@ -190,15 +208,23 @@ class InnerTab1:
         selected_option = self.weigh_status_dropdown.get()  # 获取用户选择的选项
         if selected_option == "Status[0]":
             self.df_status_filtered = self.df[self.condition_status0]
+        if selected_option == "Status[1]":
+            self.df_status_filtered = self.df[self.condition_status1]
+        if selected_option == "Status[2]":
+            self.df_status_filtered = self.df[self.condition_status2]
         if selected_option == "Status[3]":
             self.df_status_filtered = self.df[self.condition_status3]
+        if selected_option == "Status[4]":
+            self.df_status_filtered = self.df[self.condition_status4]
+        if selected_option == "Status[5]":
+            self.df_status_filtered = self.df[self.condition_status5]
 
         list_weigh_ref1 = self.df_status_filtered["WeighRef1"].unique().tolist()  # 读取WeighRef有几组值
-        list_weigh_ref1 = [x for x in list_weigh_ref1 if x != 0]                  # 筛选掉值为0的元素
+        list_weigh_ref1 = [x for x in list_weigh_ref1 if x != 0]  # 筛选掉值为0的元素
         list_weigh_ref2 = self.df_status_filtered["WeighRef2"].unique().tolist()  # 读取WeighRef有几组值
-        list_weigh_ref2 = [x for x in list_weigh_ref2 if x != 0]                  # 筛选掉值为0的元素
+        list_weigh_ref2 = [x for x in list_weigh_ref2 if x != 0]  # 筛选掉值为0的元素
         list_weigh_ref3 = self.df_status_filtered["WeighRef3"].unique().tolist()  # 读取WeighRef有几组值
-        list_weigh_ref3 = [x for x in list_weigh_ref3 if x != 0]                  # 筛选掉值为0的元素
+        list_weigh_ref3 = [x for x in list_weigh_ref3 if x != 0]  # 筛选掉值为0的元素
         # 重新排列三个列表，并生成新的列表
         self.weigh_ref_lists = [group for group in zip(list_weigh_ref1, list_weigh_ref2, list_weigh_ref3)]
         # 将重新排列后的列表作为下拉列表框的选项值
@@ -225,7 +251,7 @@ class InnerTab1:
                     (self.df_status_filtered["WeighRef1"] == weigh_ref1) &
                     (self.df_status_filtered["WeighRef2"] == weigh_ref2) &
                     (self.df_status_filtered["WeighRef3"] == weigh_ref3)
-                ]
+                    ]
 
         # print(self.df_ref_filtered)
         self.result_dropdown.set("")
@@ -254,9 +280,9 @@ class InnerTab1:
                     return "salmon"
 
             color_df = df_result[["称重位置1(g)", "称重位置2(g)", "称重位置3(g)"]].applymap(get_color)
-            color_df["小车ID"] = "white"       # 将"小车ID"这一列的颜色设置为白色
+            color_df["小车ID"] = "white"  # 将"小车ID"这一列的颜色设置为白色
             color_df["小车平均(g)"] = "white"  # 将"小车平均(g)"这一列的颜色设置为白色
-            color_df.loc[0] = "white"         # 将第[0]行颜色设置为白色
+            color_df.loc[0] = "white"  # 将第[0]行颜色设置为白色
             column_name_list = ["小车ID", "称重位置1(g)", "称重位置2(g)", "称重位置3(g)", "小车平均(g)"]
             color_df = color_df[column_name_list].reset_index(drop=True)
 
@@ -276,8 +302,7 @@ class InnerTab1:
             table.auto_set_font_size(True)
             plt.tight_layout()
 
-            # 创建一个 Tkinter 可以容纳 Matplotlib 图形的画布（canvas）。
-            # plt.gcf() 返回当前的 Matplotlib 图形对象，master=self.plot_frame 则指定了画布的父容器，即创建的 GUI 中用于显示图形的框。
+            # plt.gcf() 返回当前的 Matplotlib 图形对象
             canvas = FigureCanvasTkAgg(plt.gcf(), master=self.plot_frame)
             # canvas.draw() 调用画布的 draw 方法，以绘制图形。
             canvas.draw()
@@ -311,7 +336,7 @@ class InnerTab1:
 
             def plot_subplots(axs, dataframe, shuttle_id_pos, seg_no):
                 plt.rcParams["font.sans-serif"] = "SimHei"  # 设置中文字体为黑体
-                plt.rc("font", size=7)                      # 设置 Matplotlib 的默认字体大小
+                plt.rc("font", size=7)  # 设置 Matplotlib 的默认字体大小
 
                 # 根据ShuttleIDPos进行分组
                 shuttle_id_groups = dataframe.groupby(f"ShuttleIDPos{shuttle_id_pos}")
@@ -350,19 +375,19 @@ class InnerTab1:
                     # "m-" 指定了绘制拟合曲线的样式，"m" 表示洋红色（magenta），"-" 表示使用实线。
                     ax.plot(cpu_temp_full, fit_fn_full(cpu_temp_full), "m-",
                             label=f"满载拟合曲线\n斜率: {slope_full:.3f}")
-                    ax.tick_params(axis="x", labelsize=7)                        # 设置刻度标签的字体大小为 7
-                    ax.tick_params(axis="y", labelsize=7)                        # 设置刻度标签的字体大小为 7
+                    ax.tick_params(axis="x", labelsize=7)  # 设置刻度标签的字体大小为 7
+                    ax.tick_params(axis="y", labelsize=7)  # 设置刻度标签的字体大小为 7
                     ax.set_xlabel(f"电机{seg_no}温度(\N{DEGREE SIGN}C)", size=7)  # 设置 x 轴标签的字体大小为 7
-                    ax.set_ylabel("称重结果(g)", size=7)                          # 设置 y 轴标签的字体大小为 7
+                    ax.set_ylabel("称重结果(g)", size=7)  # 设置 y 轴标签的字体大小为 7
                     ax.set_title(f"称重位置{shuttle_id_pos}（小车ID：{int(shuttle_id)}）", size=7)
                     ax.legend()
                     ax.grid(True)
 
             figure, axis = plt.subplots(nrows=12, ncols=3, figsize=(7, 27))  # 定义画布大小和子图的布局
-            plot_subplots(axis, self.df_ref_filtered, 1, 4)                  # 称重位置1，电机4
-            plot_subplots(axis, self.df_ref_filtered, 2, 4)                  # 称重位置2，电机4
-            plot_subplots(axis, self.df_ref_filtered, 3, 2)                  # 称重位置3，电机2
-            plt.tight_layout()                                               # 自动调整子图之间的间距，以及图表的整体布局
+            plot_subplots(axis, self.df_ref_filtered, 1, 4)  # 称重位置1，电机4
+            plot_subplots(axis, self.df_ref_filtered, 2, 4)  # 称重位置2，电机4
+            plot_subplots(axis, self.df_ref_filtered, 3, 2)  # 称重位置3，电机2
+            plt.tight_layout()  # 自动调整子图之间的间距，以及图表的整体布局
 
             """创建Canvas控件"""
             # 创建了一个 Canvas 控件，放置在 Tkinter Frame 控件中
@@ -393,12 +418,14 @@ class InnerTab1:
             canvas_widget.get_tk_widget().pack(fill=tk.NONE, expand=False)
 
             """实现滚动效果"""
+
             # 定义一个事件处理函数 on_configure，它在 Canvas 大小改变时被调用，实现滚动区域的设置
             def on_configure(event):
                 # scrollregion 是 Canvas 的属性，它定义了可滚动区域的范围。
                 # canvas.bbox("all") 获取了内部 Frame inner_frame 中所有元素的边界框（bounding box）。
                 # 这个边界框表示了内部 Frame 中的内容范围，即需要滚动的区域。
                 canvas.configure(scrollregion=canvas.bbox("all"))
+
             # <Configure> 事件表示窗口大小改变事件，当内部 Frame 大小发生变化时，这个事件将被触发。
             inner_frame.bind("<Configure>", on_configure)
 
@@ -409,3 +436,4 @@ class InnerTab1:
         self.plot_frame.destroy()
         self.plot_frame = tk.Frame(self.inner_tab1, bg="white", width=730, height=400)
         self.plot_frame.grid(row=1, column=2, rowspan=6, columnspan=4, padx=5, pady=5, sticky="w")
+        self.plot_frame.grid_propagate(False)  # 设置为0可使组件大小不变

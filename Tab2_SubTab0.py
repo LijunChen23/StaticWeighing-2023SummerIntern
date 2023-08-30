@@ -18,8 +18,8 @@ class InnerTab0:
         self.status_description_mapping = {
             "Status[0]": "Empty: Clean 0, Photo 0\nFull:  Clean 0, Photo 0",
             "Status[1]": "Empty: Clean 0, Photo 0\nFull:  Clean 1, Photo 0",
-            "Status[2]": "Empty: Clean 0, Photo 1\nFull:  Clean 0, Photo 1",
-            "Status[3]": "Empty: Clean 0, Photo 1\nFull:  Clean 1, Photo 1",
+            "Status[2]": "Empty: Clean 0, Photo 1\nFull:  Clean 1, Photo 1",
+            "Status[3]": "Empty: Clean 0, Photo 1\nFull:  Clean 0, Photo 1",
             "Status[4]": "Empty: Clean 1, Photo 0\nFull:  Clean 1, Photo 0",
             "Status[5]": "Empty: Clean 1, Photo 1\nFull:  Clean 1, Photo 1"
         }
