@@ -1,6 +1,8 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import tkinter as tk
+
+import pandas as pd
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from tkinter import filedialog, ttk
 
@@ -154,38 +156,48 @@ class InnerTab1:
             (self.df["WeighEmptyStatus(1)"] == True) & (self.df["WeighEmptyStatus(2)"] == True) & \
             (self.df["WeighFullStatus(1)"] == True) & (self.df["WeighFullStatus(2)"] == True)
 
+        self.df_data_filtered = pd.DataFrame()
         list_weigh_status = []
         # 检查是否满足 condition_status 中的任意一个条件
         if any([self.condition_status0.any()]):
             df_status_filtered = self.df[self.condition_status0]
-            weigh_ref_lists = filter_df_if_less_than_5(df_status_filtered)
+            weigh_ref_lists, new_df = filter_df_if_less_than_5(df_status_filtered)
             if weigh_ref_lists:
                 list_weigh_status.append(0)
+                self.df_data_filtered = pd.concat([self.df_data_filtered, new_df], axis=0)
+
         if any([self.condition_status1.any()]):
             df_status_filtered = self.df[self.condition_status1]
-            weigh_ref_lists = filter_df_if_less_than_5(df_status_filtered)
-            if weigh_ref_lists:
+            weigh_ref_lists, new_df = filter_df_if_less_than_5(df_status_filtered)
+            if not weigh_ref_lists:
                 list_weigh_status.append(1)
+                self.df_data_filtered = pd.concat([self.df_data_filtered, new_df], axis=0)
         if any([self.condition_status2.any()]):
             df_status_filtered = self.df[self.condition_status2]
-            weigh_ref_lists = filter_df_if_less_than_5(df_status_filtered)
+            weigh_ref_lists, new_df = filter_df_if_less_than_5(df_status_filtered)
             if weigh_ref_lists:
                 list_weigh_status.append(2)
+                self.df_data_filtered = pd.concat([self.df_data_filtered, new_df], axis=0)
         if any([self.condition_status3.any()]):
             df_status_filtered = self.df[self.condition_status3]
-            weigh_ref_lists = filter_df_if_less_than_5(df_status_filtered)
+            weigh_ref_lists, new_df = filter_df_if_less_than_5(df_status_filtered)
             if weigh_ref_lists:
                 list_weigh_status.append(3)
+                self.df_data_filtered = pd.concat([self.df_data_filtered, new_df], axis=0)
         if any([self.condition_status4.any()]):
             df_status_filtered = self.df[self.condition_status4]
-            weigh_ref_lists = filter_df_if_less_than_5(df_status_filtered)
+            weigh_ref_lists, new_df = filter_df_if_less_than_5(df_status_filtered)
             if weigh_ref_lists:
                 list_weigh_status.append(4)
+                self.df_data_filtered = pd.concat([self.df_data_filtered, new_df], axis=0)
         if any([self.condition_status5.any()]):
             df_status_filtered = self.df[self.condition_status5]
-            weigh_ref_lists = filter_df_if_less_than_5(df_status_filtered)
+            weigh_ref_lists, new_df = filter_df_if_less_than_5(df_status_filtered)
             if weigh_ref_lists:
                 list_weigh_status.append(5)
+                self.df_data_filtered = pd.concat([self.df_data_filtered, new_df], axis=0)
+
+        self.df_data_filtered.reset_index(drop=True, inplace=True)  # 重置索引
 
         self.weigh_status_dropdown.set("")
         self.weigh_status_dropdown.config(values=[f"Status[{item}]" for item in list_weigh_status], state="readonly")
@@ -219,7 +231,7 @@ class InnerTab1:
         db_file_path = self.db_listbox.get(0)
         # 以下代码返回数据库中的表格的dataframe
         from Tab1_SubTab1_SaveToDatabase import update_process
-        update_process(df=self.df, db_file_path=db_file_path, table_name=self.table_name)
+        update_process(df=self.df_data_filtered, db_file_path=db_file_path, table_name=self.table_name)
 
     # 根据下拉列表框中的选项，生成相应的折线图，放在图表框中 ===================================================================
     def show_weigh_status(self, event):
@@ -237,7 +249,7 @@ class InnerTab1:
         elif selected_option == "Status[5]":
             self.df_status_filtered = self.df[self.condition_status5]
 
-        self.weigh_ref_lists = filter_df_if_less_than_5(self.df_status_filtered)
+        self.weigh_ref_lists, new_df = filter_df_if_less_than_5(self.df_status_filtered)
 
         self.status_description_text["state"] = "normal"
         self.status_description_text.delete("1.0", "end")  # 清除文本框内容
@@ -455,6 +467,7 @@ def filter_df_if_less_than_5(df):
     # 重新排列三个列表，并生成新的列表
     weigh_ref_lists = [group for group in zip(list_weigh_ref1, list_weigh_ref2, list_weigh_ref3)]
 
+    new_df = pd.DataFrame()
     new_weigh_ref_lists = []
     for weigh_ref_list in weigh_ref_lists:
         df_ref_filtered = df[
@@ -477,5 +490,7 @@ def filter_df_if_less_than_5(df):
 
         if all_columns_present == [True, True, True]:
             new_weigh_ref_lists.append(weigh_ref_list)
+            new_df = pd.concat([new_df, df_ref_filtered], axis=0)
+            new_df.reset_index(drop=True, inplace=True)  # 重置索引
 
-    return new_weigh_ref_lists
+    return new_weigh_ref_lists, new_df
