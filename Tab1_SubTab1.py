@@ -208,15 +208,15 @@ class InnerTab1:
         selected_option = self.weigh_status_dropdown.get()  # 获取用户选择的选项
         if selected_option == "Status[0]":
             self.df_status_filtered = self.df[self.condition_status0]
-        if selected_option == "Status[1]":
+        elif selected_option == "Status[1]":
             self.df_status_filtered = self.df[self.condition_status1]
-        if selected_option == "Status[2]":
+        elif selected_option == "Status[2]":
             self.df_status_filtered = self.df[self.condition_status2]
-        if selected_option == "Status[3]":
+        elif selected_option == "Status[3]":
             self.df_status_filtered = self.df[self.condition_status3]
-        if selected_option == "Status[4]":
+        elif selected_option == "Status[4]":
             self.df_status_filtered = self.df[self.condition_status4]
-        if selected_option == "Status[5]":
+        elif selected_option == "Status[5]":
             self.df_status_filtered = self.df[self.condition_status5]
 
         list_weigh_ref1 = self.df_status_filtered["WeighRef1"].unique().tolist()  # 读取WeighRef有几组值

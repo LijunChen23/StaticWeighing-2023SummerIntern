@@ -99,10 +99,9 @@ class InnerTab2:
             (self.time_filtered_df["TimeStamp"] != "1970-01-01 00:00:00") &
             (self.time_filtered_df["TimeStamp"].dt.year != 2021)
         ]
+
         print(self.time_filtered_df)
         self.clear_plot()
-        #for _, var in self.weigh_pos_checkboxes:
-            #var.set(0)
 
     # ==================================================================================================================
     def create_shuttle_id_options(self):
@@ -172,32 +171,82 @@ class InnerTab2:
         selected_shuttle_ids = [
             int(float(shuttle_id)) for shuttle_id, var in self.shuttle_id_checkboxes if var.get() == 1]
         selected_statuses = [status for status, var in self.weigh_status_checkboxes if var.get() == 1]
-        print(selected_statuses)
+        print(f"selected_statuses: {selected_statuses}\n")
         self.clear_plot()
 
-        if selected_poss and selected_shuttle_ids:
+        if selected_poss and selected_shuttle_ids and selected_statuses:
             # 创建一个布尔条件列表，用于选择满足任一条件的行
             condition_list = []
             for selected_pos in selected_poss:
                 for shuttle_id in selected_shuttle_ids:
                     condition = self.time_filtered_df[f"ShuttleIDPos{selected_pos}"] == shuttle_id
                     condition_list.append(condition)
-
+            print(f"condition_list:\n{condition_list}\n")
             # 使用逻辑或将所有条件组合在一起
             combined_condition = condition_list[0]
             for condition in condition_list[1:]:
                 combined_condition |= condition
-
-            # 将组合条件应用于原始 DataFrame，得到满足条件的子集 DataFrame
             filtered_df = self.time_filtered_df[combined_condition]
+
+            print(f"self.time_filtered_df[combined_condition]:\n{filtered_df}\n")
+
+            columns_to_check = [
+                "WeighEmptyStatus(0)", "WeighEmptyStatus(1)", "WeighEmptyStatus(2)", "WeighEmptyStatus(3)",
+                "WeighEmptyStatus(4)", "WeighFullStatus(0)", "WeighFullStatus(1)", "WeighFullStatus(2)",
+                "WeighFullStatus(3)", "WeighFullStatus(4)"
+            ]
+            filtered_df = filtered_df[~(filtered_df[columns_to_check] == False).all(axis=1)]
+
+            print(f"filtered_df[~(filtered_df[columns_to_check] == False).all(axis=1)]:\n{filtered_df}\n")
+
+            status_condition_list = []
+            for selected_status in selected_statuses:
+                if selected_status == 0:
+                    status_condition_list.append(
+                        (filtered_df["WeighEmptyStatus(1)"] == False) & (filtered_df["WeighEmptyStatus(2)"] == False) &
+                        (filtered_df["WeighFullStatus(1)"] == False) & (filtered_df["WeighFullStatus(2)"] == False)
+                    )
+                elif selected_status == 1:
+                    status_condition_list.append(
+                        (filtered_df["WeighEmptyStatus(1)"] == False) & (filtered_df["WeighEmptyStatus(2)"] == False) &
+                        (filtered_df["WeighFullStatus(1)"] == True) & (filtered_df["WeighFullStatus(2)"] == False)
+                    )
+                elif selected_status == 2:
+                    status_condition_list.append(
+                        (filtered_df["WeighEmptyStatus(1)"] == False) & (filtered_df["WeighEmptyStatus(2)"] == True) &
+                        (filtered_df["WeighFullStatus(1)"] == True) & (filtered_df["WeighFullStatus(2)"] == True)
+                    )
+                elif selected_status == 3:
+                    status_condition_list.append(
+                        (filtered_df["WeighEmptyStatus(1)"] == False) & (filtered_df["WeighEmptyStatus(2)"] == True) &
+                        (filtered_df["WeighFullStatus(1)"] == False) & (filtered_df["WeighFullStatus(2)"] == True)
+                    )
+                elif selected_status == 4:
+                    status_condition_list.append(
+                        (filtered_df["WeighEmptyStatus(1)"] == True) & (filtered_df["WeighEmptyStatus(2)"] == False) &
+                        (filtered_df["WeighFullStatus(1)"] == True) & (filtered_df["WeighFullStatus(2)"] == False)
+                    )
+                else:
+                    status_condition_list.append(
+                        (filtered_df["WeighEmptyStatus(1)"] == True) & (filtered_df["WeighEmptyStatus(2)"] == True) &
+                        (filtered_df["WeighFullStatus(1)"] == True) & (filtered_df["WeighFullStatus(2)"] == True)
+                    )
+
+            # 使用逻辑或将所有条件组合在一起
+            combined_status_condition = status_condition_list[0]
+            for condition in status_condition_list[1:]:
+                combined_status_condition |= condition
+            print(f"combined_status_condition:\n{combined_status_condition}\n")
+            status_filtered_df = filtered_df[combined_status_condition]
+            print(f"filtered_df[combined_condition]:\n{status_filtered_df}\n")
 
             plt.rcParams["font.sans-serif"] = "SimHei"  # 设置字体为简体中文黑体
             plt.rcParams["axes.unicode_minus"] = False  # 解决负号无法正常显示的问题
             plt.figure(figsize=(9, 4))
 
             for selected_pos in selected_poss:
-                weigh_relative_list = filtered_df[f"WeighRelative{selected_pos}"].tolist()
-                timestamp_list = pd.to_datetime(filtered_df["TimeStamp"]).tolist()
+                weigh_relative_list = status_filtered_df[f"WeighRelative{selected_pos}"].tolist()
+                timestamp_list = pd.to_datetime(status_filtered_df["TimeStamp"]).tolist()
                 plt.scatter(timestamp_list, weigh_relative_list, label=f"称重位置{selected_pos}", s=5)
 
             plt.xlabel("时间戳")
