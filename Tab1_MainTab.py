@@ -118,7 +118,7 @@ class DataProcessingTab:
                     df = controller_and_dataframe[1]
                     print(df)
                     self.inner_tab0.update_content(df=df, controller_serial_number=selected_table)
-                    self.inner_tab1.update_content(df=df, controller_serial_number=selected_table)
+                    self.inner_tab1.update_content(df_db=df, controller_serial_number=selected_table)
                     self.inner_tab2.update_content(df=df, controller_serial_number=selected_table)
                     self.enable_tabs()
 

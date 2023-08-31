@@ -121,19 +121,19 @@ class InnerTab1:
         self.inner_tab1.grid_rowconfigure(6, weight=1)
         self.inner_tab1.grid_columnconfigure(2, weight=1)
 
-    # ==================================================================================================================
-    def update_content(self, df, controller_serial_number):
-        # 更新InnerTab1的内容
+    # 更新InnerTab1的内容 ================================================================================================
+    def update_content(self, df_db, controller_serial_number):
         self.table_name = controller_serial_number
 
-        print(f"df: {df}")
+        # 先将WeighRef不等于0的行筛选掉
+        ref_filtered_df = df_db[(df_db["WeighRef1"] != 0) & (df_db["WeighRef2"] != 0) & (df_db["WeighRef3"] != 0)]
+
         columns_to_check = [
             "WeighEmptyStatus(0)", "WeighEmptyStatus(1)", "WeighEmptyStatus(2)", "WeighEmptyStatus(3)",
             "WeighEmptyStatus(4)", "WeighFullStatus(0)", "WeighFullStatus(1)", "WeighFullStatus(2)",
             "WeighFullStatus(3)", "WeighFullStatus(4)"
         ]
-        self.df = df[~(df[columns_to_check] == False).all(axis=1)]
-        print(f"self.df: {self.df}")
+        self.df = ref_filtered_df[~(ref_filtered_df[columns_to_check] == False).all(axis=1)]
 
         self.condition_status0 = \
             (self.df["WeighEmptyStatus(1)"] == False) & (self.df["WeighEmptyStatus(2)"] == False) & \
@@ -155,19 +155,37 @@ class InnerTab1:
             (self.df["WeighFullStatus(1)"] == True) & (self.df["WeighFullStatus(2)"] == True)
 
         list_weigh_status = []
-        # 检查是否满足 condition_status0 或 condition_status3 中的任意一个条件
+        # 检查是否满足 condition_status 中的任意一个条件
         if any([self.condition_status0.any()]):
-            list_weigh_status.append(0)
+            df_status_filtered = self.df[self.condition_status0]
+            weigh_ref_lists = filter_df_if_less_than_5(df_status_filtered)
+            if weigh_ref_lists:
+                list_weigh_status.append(0)
         if any([self.condition_status1.any()]):
-            list_weigh_status.append(1)
+            df_status_filtered = self.df[self.condition_status1]
+            weigh_ref_lists = filter_df_if_less_than_5(df_status_filtered)
+            if weigh_ref_lists:
+                list_weigh_status.append(1)
         if any([self.condition_status2.any()]):
-            list_weigh_status.append(2)
+            df_status_filtered = self.df[self.condition_status2]
+            weigh_ref_lists = filter_df_if_less_than_5(df_status_filtered)
+            if weigh_ref_lists:
+                list_weigh_status.append(2)
         if any([self.condition_status3.any()]):
-            list_weigh_status.append(3)
+            df_status_filtered = self.df[self.condition_status3]
+            weigh_ref_lists = filter_df_if_less_than_5(df_status_filtered)
+            if weigh_ref_lists:
+                list_weigh_status.append(3)
         if any([self.condition_status4.any()]):
-            list_weigh_status.append(4)
+            df_status_filtered = self.df[self.condition_status4]
+            weigh_ref_lists = filter_df_if_less_than_5(df_status_filtered)
+            if weigh_ref_lists:
+                list_weigh_status.append(4)
         if any([self.condition_status5.any()]):
-            list_weigh_status.append(5)
+            df_status_filtered = self.df[self.condition_status5]
+            weigh_ref_lists = filter_df_if_less_than_5(df_status_filtered)
+            if weigh_ref_lists:
+                list_weigh_status.append(5)
 
         self.weigh_status_dropdown.set("")
         self.weigh_status_dropdown.config(values=[f"Status[{item}]" for item in list_weigh_status], state="readonly")
@@ -219,15 +237,7 @@ class InnerTab1:
         elif selected_option == "Status[5]":
             self.df_status_filtered = self.df[self.condition_status5]
 
-        list_weigh_ref1 = self.df_status_filtered["WeighRef1"].unique().tolist()  # 读取WeighRef有几组值
-        list_weigh_ref1 = [x for x in list_weigh_ref1 if x != 0]  # 筛选掉值为0的元素
-        list_weigh_ref2 = self.df_status_filtered["WeighRef2"].unique().tolist()  # 读取WeighRef有几组值
-        list_weigh_ref2 = [x for x in list_weigh_ref2 if x != 0]  # 筛选掉值为0的元素
-        list_weigh_ref3 = self.df_status_filtered["WeighRef3"].unique().tolist()  # 读取WeighRef有几组值
-        list_weigh_ref3 = [x for x in list_weigh_ref3 if x != 0]  # 筛选掉值为0的元素
-        # 重新排列三个列表，并生成新的列表
-        self.weigh_ref_lists = [group for group in zip(list_weigh_ref1, list_weigh_ref2, list_weigh_ref3)]
-        # 将重新排列后的列表作为下拉列表框的选项值
+        self.weigh_ref_lists = filter_df_if_less_than_5(self.df_status_filtered)
 
         self.status_description_text["state"] = "normal"
         self.status_description_text.delete("1.0", "end")  # 清除文本框内容
@@ -265,12 +275,10 @@ class InnerTab1:
         from Tab1_SubTab1_ProcessResult import process_data
         df_result = process_data(self.df_ref_filtered, selected_option)
 
-        """销毁之前的Frame，创建新的Frame"""
-        self.clear_plot()
+        self.clear_plot()  # 销毁之前的Frame，创建新的Frame
 
         # 如果选择的是“称重偏差” ------------------------------------------------------------------------------------------
         if selected_option == "称重偏差":
-
             def get_color(value):
                 if 0 <= value <= 0.2:
                     return "mediumseagreen"
@@ -437,3 +445,37 @@ class InnerTab1:
         self.plot_frame = tk.Frame(self.inner_tab1, bg="white", width=730, height=400)
         self.plot_frame.grid(row=1, column=2, rowspan=6, columnspan=4, padx=5, pady=5, sticky="w")
         self.plot_frame.grid_propagate(False)  # 设置为0可使组件大小不变
+
+
+# 判断小车id从1到12，在称重位置1、2、3的情况下，每个情况是否有至少5条数据 =======================================================
+def filter_df_if_less_than_5(df):
+    list_weigh_ref1 = df["WeighRef1"].unique().tolist()  # 读取WeighRef有几组值
+    list_weigh_ref2 = df["WeighRef2"].unique().tolist()  # 读取WeighRef有几组值
+    list_weigh_ref3 = df["WeighRef3"].unique().tolist()  # 读取WeighRef有几组值
+    # 重新排列三个列表，并生成新的列表
+    weigh_ref_lists = [group for group in zip(list_weigh_ref1, list_weigh_ref2, list_weigh_ref3)]
+
+    new_weigh_ref_lists = []
+    for weigh_ref_list in weigh_ref_lists:
+        df_ref_filtered = df[
+            (df["WeighRef1"] == weigh_ref_list[0]) &
+            (df["WeighRef2"] == weigh_ref_list[1]) &
+            (df["WeighRef3"] == weigh_ref_list[2])
+            ]
+
+        # 列名列表
+        columns_to_check = ["ShuttleIDPos1", "ShuttleIDPos2", "ShuttleIDPos3"]
+        all_columns_present = []
+        for col in columns_to_check:
+            # 检查每列是否满足条件
+            value_counts = df_ref_filtered[col].value_counts()
+            if all(value_counts.get(i, 0) >= 5 for i in range(1, 13)):
+                column_present = True
+            else:
+                column_present = False
+            all_columns_present.append(column_present)
+
+        if all_columns_present == [True, True, True]:
+            new_weigh_ref_lists.append(weigh_ref_list)
+
+    return new_weigh_ref_lists

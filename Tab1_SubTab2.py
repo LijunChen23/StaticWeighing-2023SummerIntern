@@ -16,6 +16,8 @@ class InnerTab2:
         self.shuttle_id_checkboxes = []
         self.weigh_status_checkboxes = []
         self.table_name = None
+        self.df = None
+        self.frame_weigh_status = None
         self.status_descriptions = {
             "[0]: Empty: Clean 0, Photo 0\n     Full:  Clean 0, Photo 0": 0,
             "[1]: Empty: Clean 0, Photo 0\n     Full:  Clean 1, Photo 0": 1,
