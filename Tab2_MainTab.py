@@ -63,7 +63,7 @@ class CalibrationDataTab:
         self.db_table_dropdown.bind("<<ComboboxSelected>>", self.controller_dropdown_selected)
 
         # 创建子tab -----------------------------------------------------------------------------------------------------
-        self.inner_tab_control = ttk.Notebook(self.main_tab, style="TNotebook")
+        self.inner_tab_control = ttk.Notebook(self.main_tab)
         self.inner_tab0 = InnerTab0(parent_tab=self.inner_tab_control)
         self.inner_tab1 = InnerTab1(parent_tab=self.inner_tab_control)
 

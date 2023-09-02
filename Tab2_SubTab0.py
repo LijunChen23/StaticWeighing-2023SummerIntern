@@ -78,8 +78,8 @@ class InnerTab0:
         self.result_dropdown.bind("<<ComboboxSelected>>", self.show_result_table)
 
         # 创建一个框用于展示生成的表格 --------------------------------------------------------------------------------------
-        self.plot_frame = tk.Frame(self.inner_tab0, bg="white", width=500, height=400)
-        self.plot_frame.grid(row=0, column=2, rowspan=6, padx=5, pady=20, sticky="ns")
+        self.plot_frame = tk.Frame(self.inner_tab0, bg="white", width=520, height=470)
+        self.plot_frame.grid(row=0, column=2, rowspan=6, padx=5, pady=20, sticky="n")
 
         # 辅助排版 ------------------------------------------------------------------------------------------------------
         self.inner_tab0.grid_rowconfigure(3, weight=1)
@@ -174,7 +174,7 @@ class InnerTab0:
 
         tree = ttk.Treeview(master=self.plot_frame, columns=columns, show="headings")
         # 设置 treeview 的位置和大小
-        tree.place(x=0, y=0, width=500, height=400)
+        tree.place(x=0, y=0, width=520, height=470)
         for col in columns:
             tree.heading(col, text=col)
             tree.column(col, width=120, anchor="center")
@@ -189,5 +189,5 @@ class InnerTab0:
     # 清空图表框 ========================================================================================================
     def clear_frame(self):
         self.plot_frame.destroy()
-        self.plot_frame = tk.Frame(self.inner_tab0, bg="white", width=500, height=400)
-        self.plot_frame.grid(row=0, column=2, rowspan=6, padx=5, pady=20, sticky="ns")
+        self.plot_frame = tk.Frame(self.inner_tab0, bg="white", width=520, height=470)
+        self.plot_frame.grid(row=0, column=2, rowspan=6, padx=5, pady=20, sticky="n")
